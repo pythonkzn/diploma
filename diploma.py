@@ -4,9 +4,6 @@ import json
 import codecs
 import time
 
-
-TOKEN = '73eaea320bdc0d3299faa475c196cfea1c4df9da4c6d291633f9fe8f83c08c4de2a3abf89fbc3ed8a44e1'
-
 class User:
     def __init__(self, id):
         self.id = id
@@ -44,7 +41,7 @@ class User:
                 response_get_groups = requests.get('https://api.vk.com/method/groups.get', params)
                 friends_group_list.append(response_get_groups.json()['response']['items']) #получаем список списков групп в которых состоят все друзья user
                 print('-')
-                time.sleep(2)
+                time.sleep(1)
             except:
                 print(response_get_groups.json()) #выводим полученные ошибки от API VK
         output_list = list(itertools.chain.from_iterable(friends_group_list)) #делаем список групп из списка списков
@@ -55,8 +52,6 @@ class User:
         user_group_set = set(self.get_subs_gid())
         friends_group_set = set(self.get_subs_gid_fr())
         return set(user_group_set.difference(friends_group_set))
-
-
 
 class Group:
     def __init__(self, id):
@@ -81,37 +76,40 @@ class Group:
         output_dict = {'name': group_data_dict['name'], 'gid': group_data_dict['id'], 'members_count': group_data_dict['members_count']}
         return output_dict
 
+if __name__ == "__main__":
+    with open('token.json', 'r') as file:
+        data = json.load(file)
+        TOKEN = data[0]['token']
 
+    user_input = input('Введите id или имя пользователя: ')
 
-user_input = input('Введите id или имя пользователя: ')
-
-try:
-    int(user_input)
-    user = User(user_input)
-except ValueError:
-    params = {
-        'user_ids': user_input,
-        'access_token': TOKEN,
-        'v': 5.92
-    }
-    response_get_id = requests.get(
-        'https://api.vk.com/method/users.get',
-        params
-    )
-    user = User(int(response_get_id.json()['response'][0]['id'])) #получили по имени пользователя его id
-
-
-output_list = []
-uncommon_groups = user.uncommon_group_list()
-
-for group in uncommon_groups:
     try:
-        group = Group(group)
-        output_list.append(group.get_group_data())
-    except:
-        pass
+        int(user_input)
+        user = User(user_input)
+    except ValueError:
+        params = {
+            'user_ids': user_input,
+            'access_token': TOKEN,
+            'v': 5.92
+        }
+        response_get_id = requests.get(
+            'https://api.vk.com/method/users.get',
+            params
+        )
+        user = User(int(response_get_id.json()['response'][0]['id'])) #получили по имени пользователя его id
 
-with codecs.open('groups.json', 'w', encoding='utf-8') as json_file:
-    json.dump(output_list, json_file, ensure_ascii=False)
-print(uncommon_groups)
+
+    output_list = []
+    uncommon_groups = user.uncommon_group_list()
+
+    for group in uncommon_groups:
+        try:
+            group = Group(group)
+            output_list.append(group.get_group_data())
+        except:
+            pass
+
+    with codecs.open('groups.json', 'w', encoding='utf-8') as json_file:
+        json.dump(output_list, json_file, ensure_ascii=False)
+    print(uncommon_groups)
 
