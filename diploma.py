@@ -35,7 +35,7 @@ class User:
                 friends_group_list.append(response_get_groups.json()['response']['items'])
                 # получаем список списков групп в которых состоят все друзья user
                 print('-')
-                time.sleep(1)
+                time.sleep(0.33)
             except Exception as e:
                 print(response_get_groups.json())  # выводим полученные ошибки от API VK
         output_list = list(itertools.chain.from_iterable(friends_group_list))  # делаем список групп из списка списков
