@@ -72,46 +72,47 @@ class Group:
         return output_dict
 
 
+def get_user(usr_in):
+    try:
+        int(usr_in)
+        user = User(usr_in)
+    except ValueError:
+        params = {
+            'user_ids': usr_in,
+            'access_token': TOKEN,
+            'v': 5.92
+        }
+        response_get_id = requests.get(
+            'https://api.vk.com/method/users.get',
+            params
+        )
+        user = User(int(response_get_id.json()['response'][0]['id']))  # получили по имени пользователя его id
+    return user
+
+def get_output_data(unc_gr):
+    output_list = []
+    for group in unc_gr:
+        try:
+            group = Group(group)
+            output_list.append(group.get_group_data())
+        except Exception as e:
+            pass
+    return output_list
+
+
+def main():
+    user_input = input('Введите id или имя пользователя: ')
+    user = get_user(user_input)     #
+    uncommon_groups = user.uncommon_group_list()
+    output_list = get_output_data(uncommon_groups)
+    with codecs.open('groups.json', 'w', encoding='utf-8') as json_file:
+        json.dump(output_list, json_file, ensure_ascii=False)
+    print(uncommon_groups)
+
+
 if __name__ == "__main__":
     with open('token.json', 'r') as file:
         data = json.load(file)
         TOKEN = data[0]['token']
 
-    def get_user(usr_in):
-        try:
-            int(usr_in)
-            user = User(usr_in)
-        except ValueError:
-            params = {
-                'user_ids': usr_in,
-                'access_token': TOKEN,
-                'v': 5.92
-            }
-            response_get_id = requests.get(
-                'https://api.vk.com/method/users.get',
-                params
-            )
-            user = User(int(response_get_id.json()['response'][0]['id']))  # получили по имени пользователя его id
-        return user
-
-    def get_output_data(unc_gr):
-        output_list = []
-        for group in unc_gr:
-            try:
-                group = Group(group)
-                output_list.append(group.get_group_data())
-            except Exception as e:
-                pass
-        return output_list
-
-    def main():
-        user_input = input('Введите id или имя пользователя: ')
-        user = get_user(user_input)     #
-        uncommon_groups = user.uncommon_group_list()
-        output_list = get_output_data(uncommon_groups)
-        with codecs.open('groups.json', 'w', encoding='utf-8') as json_file:
-            json.dump(output_list, json_file, ensure_ascii=False)
-        print(uncommon_groups)
-
     main()
-
