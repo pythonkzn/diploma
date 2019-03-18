@@ -77,33 +77,41 @@ if __name__ == "__main__":
         data = json.load(file)
         TOKEN = data[0]['token']
 
-    user_input = input('Введите id или имя пользователя: ')
-
-    try:
-        int(user_input)
-        user = User(user_input)
-    except ValueError:
-        params = {
-            'user_ids': user_input,
-            'access_token': TOKEN,
-            'v': 5.92
-        }
-        response_get_id = requests.get(
-            'https://api.vk.com/method/users.get',
-            params
-        )
-        user = User(int(response_get_id.json()['response'][0]['id']))  # получили по имени пользователя его id
-
-    output_list = []
-    uncommon_groups = user.uncommon_group_list()
-
-    for group in uncommon_groups:
+    def get_user(usr_in):
         try:
-            group = Group(group)
-            output_list.append(group.get_group_data())
-        except Exception as e:
-            pass
+            int(usr_in)
+            user = User(usr_in)
+        except ValueError:
+            params = {
+                'user_ids': usr_in,
+                'access_token': TOKEN,
+                'v': 5.92
+            }
+            response_get_id = requests.get(
+                'https://api.vk.com/method/users.get',
+                params
+            )
+            user = User(int(response_get_id.json()['response'][0]['id']))  # получили по имени пользователя его id
+        return user
 
-    with codecs.open('groups.json', 'w', encoding='utf-8') as json_file:
-        json.dump(output_list, json_file, ensure_ascii=False)
-    print(uncommon_groups)
+    def get_output_data(unc_gr):
+        output_list = []
+        for group in unc_gr:
+            try:
+                group = Group(group)
+                output_list.append(group.get_group_data())
+            except Exception as e:
+                pass
+        return output_list
+
+    def main():
+        user_input = input('Введите id или имя пользователя: ')
+        user = get_user(user_input)     #
+        uncommon_groups = user.uncommon_group_list()
+        output_list = get_output_data(uncommon_groups)
+        with codecs.open('groups.json', 'w', encoding='utf-8') as json_file:
+            json.dump(output_list, json_file, ensure_ascii=False)
+        print(uncommon_groups)
+
+    main()
+
